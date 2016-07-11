@@ -12,11 +12,11 @@ import org.geotools.data.complex.config.EmfComplexFeatureReader;
 import org.geotools.data.complex.config.FeatureTypeRegistry;
 import org.geotools.feature.NameImpl;
 import org.geotools.feature.complex.ComplexFeatureTypeRegistry;
-import org.geotools.feature.complex.ComplexGMLConfiguration;
 import org.geotools.feature.complex.NewXmlComplexFeatureParser;
 import org.geotools.feature.type.ComplexFeatureTypeFactoryImpl;
 import org.geotools.feature.type.FeatureTypeFactoryImpl;
 import org.geotools.gml3.complex.GmlFeatureTypeRegistryConfiguration;
+import org.geotools.gml3.v_3_2.ComplexApplicationSchemaConfiguration;
 import org.geotools.xml.PullParser;
 import org.geotools.xml.SchemaIndex;
 import org.geotools.xml.resolver.SchemaCache;
@@ -95,17 +95,15 @@ public class ComplexFeatureParsingTest {
         registry.addSchemas(schemaIndex);
 
         InputStream in = getClass().getResourceAsStream("SMALL.gml");
-        ComplexGMLConfiguration configuration = new ComplexGMLConfiguration();
+        ComplexApplicationSchemaConfiguration configuration = new ComplexApplicationSchemaConfiguration("http://www.opengis.net/indoorgml/1.0/core", "http://schemas.opengis.net/indoorgml/1.0/indoorgmlcore.xsd");
         configuration.setFeatureTypeRegistry(registry);
         PullParser parser = new PullParser( configuration, in, new QName("http://www.opengis.net/indoorgml/1.0/core","IndoorFeatures") );
-        
-        int nfeatures = 0;
-        
+         
         List<Feature> fList = new ArrayList<Feature>();
         Feature f = null;
         while( ( f = (Feature) parser.parse() ) != null ) {
             fList.add(f);
-        } 
+        }
         
         AttributeDescriptor descriptor = registry.getDescriptor(new NameImpl("http://www.opengis.net/indoorgml/1.0/core",":" ,"IndoorFeatures"), null);
         

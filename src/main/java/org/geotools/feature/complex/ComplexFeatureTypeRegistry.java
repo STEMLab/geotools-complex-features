@@ -447,12 +447,8 @@ public class ComplexFeatureTypeRegistry {
             String name = typeDefinition.getName();
             Name typeName = Types.typeName(targetNamespace, name);
             
-            //System.out.println("start type of " + typeName);
-            
             type = getAttributeType(typeName, typeDefinition, crs);
             if (type == null) {
-                
-                //System.out.println("create type of " + typeName);
                 type = createType(typeName, typeDefinition, crs, false);
             }
         } else {
@@ -546,10 +542,6 @@ public class ComplexFeatureTypeRegistry {
             AttributeDescriptor descriptor;
             for (Iterator it = children.iterator(); it.hasNext();) {
                 childDecl = (XSDElementDeclaration) it.next();
-                
-                if(childDecl.getName().equalsIgnoreCase("Geometry2D")) {
-                    System.out.println();
-                }
                 
                 try {
                     descriptor = createAttributeDescriptor(complexTypeDef, childDecl, crs);

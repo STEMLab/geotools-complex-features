@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.geotools.gml3.v_3_2.complex.binding;
+package org.geotools.gml3.v3_2.complex.binding;
 
 import java.util.Collection;
 import java.util.Iterator;

@@ -14,7 +14,7 @@
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *    Lesser General Public License for more details.
  */
-package org.geotools.gml3.v_3_2.complex.binding;
+package org.geotools.gml3.v3_2.complex.binding;
 
 import java.util.List;
 
@@ -119,17 +119,12 @@ public class ComplexFeatureTypeBinding extends AbstractComplexBinding {
      */
     public Object parse(ElementInstance instance, Node node, Object value)
         throws Exception {
-   
-            System.out.println(instance);
-        
-        
-            return GMLComplexParsingUtils.parseFeature(instance, node, value, ftCache, registry);
+        return GMLComplexParsingUtils.parseFeature(instance, node, value, ftCache, registry);
     }
 
     public Element encode(Object object, Document document, Element value)
         throws Exception {
             return value;
-        
     }
 
     @Override
