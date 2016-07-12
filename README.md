@@ -1,2 +1,2 @@
-# geotools_complex_features
+# GeoTools Complex Features Module
 Geotools Extension module for supporting complex features
