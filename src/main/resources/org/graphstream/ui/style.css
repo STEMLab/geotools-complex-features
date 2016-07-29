@@ -1,0 +1,52 @@
+graph {
+
+}
+
+node {
+	size: 10px;
+	fill-color: black;
+	
+	stroke-mode: plain; 
+	stroke-color: #999; 
+	shadow-mode: plain; 
+	shadow-width: 0px; 
+	shadow-color: #999; 
+	shadow-offset: 3px, -3px;
+}
+
+node.feature {
+	text-mode : normal;
+	size-mode: fit;
+	shape: rounded-box; 
+	fill-color: white; 
+	stroke-mode: plain;
+}
+
+node.complex {
+	shape: box; 
+	fill-color: white; 
+	padding: 3px, 2px;
+}
+
+node.attribute {
+	shape: circle; 
+	fill-color: blue;
+}
+
+node.geometry {
+	shape: diamond;
+	fill-color: skyblue;
+}
+
+node.visible {
+	text-mode : normal;
+}
+
+node.invisible {
+	text-mode : hidden;
+}
+
+edge {
+	text-mode : hidden;
+	text-alignment : along;
+}

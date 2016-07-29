@@ -62,7 +62,7 @@ import org.xmlpull.v1.XmlPullParserException;
  * Parses complex features from input stream.
  * 
  * @author Adam Brown (Curtin University of Technology)
- * @author HyungGyu Ryoo (Pusan National University)
+ * @author Hyung-Gyu Ryoo (Pusan National University)
  * @author Joon-Seok Kim (Pusan National University)
  */
 public class NewXmlComplexFeatureParser extends NewXmlFeatureParser<FeatureType, Feature> {

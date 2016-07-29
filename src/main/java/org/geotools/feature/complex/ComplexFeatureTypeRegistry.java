@@ -273,7 +273,6 @@ public class ComplexFeatureTypeRegistry {
 
                     List<XSDParticle> childParticles = Schemas.getChildElementParticles(typeDef,
                             true);
-
                     for (XSDParticle particle : childParticles) {
                         XSDElementDeclaration element = (XSDElementDeclaration) particle
                                 .getContent();
@@ -529,6 +528,11 @@ public class ComplexFeatureTypeRegistry {
         }
 
         if (typeDefinition instanceof XSDComplexTypeDefinition) {
+            
+            if(typeDefinition.getTargetNamespace().contains("core")) {
+                System.out.println();
+            }
+            
             XSDComplexTypeDefinition complexTypeDef;
             complexTypeDef = (XSDComplexTypeDefinition) typeDefinition;
             boolean includeParents = true;
@@ -537,11 +541,17 @@ public class ComplexFeatureTypeRegistry {
 
             final Collection<PropertyDescriptor> schema = new ArrayList<PropertyDescriptor>(
                     children.size());
-
+            
+           
+            
             XSDElementDeclaration childDecl;
             AttributeDescriptor descriptor;
             for (Iterator it = children.iterator(); it.hasNext();) {
                 childDecl = (XSDElementDeclaration) it.next();
+                
+                if(childDecl.getName().equalsIgnoreCase("duality")) {
+                    System.out.println();
+                }
                 
                 try {
                     descriptor = createAttributeDescriptor(complexTypeDef, childDecl, crs);
@@ -626,12 +636,13 @@ public class ComplexFeatureTypeRegistry {
         boolean isAbstract = false;// TODO
         List<Filter> restrictions = Collections.emptyList();
         InternationalString description = null; // TODO
-
+        
         AttributeType type;
         if (helper.isFeatureType(typeDefinition)) {
             type = typeFactory.createFeatureType(assignedName, schema, null, isAbstract,
                     restrictions, superType, description);
-        } else {
+        }
+        else {
             boolean isIdentifiable = helper
                     .isIdentifiable(typeDefinition);
             type = typeFactory.createComplexType(assignedName, schema, isIdentifiable, isAbstract,

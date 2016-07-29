@@ -478,7 +478,7 @@ public abstract class NewXmlFeatureParser<FT extends FeatureType, F extends Feat
                                 tagName = parser.getName();
                                 eventType = parser.getEventType();
                         } while (eventType == START_TAG
-                                        && tagName == GML.pos.getLocalPart());
+                                        && tagName.equalsIgnoreCase(GML.pos.getLocalPart()));
                         lineCoords = coords.toArray(new Coordinate[coords.size()]);
                 } else if (GML.posList.equals(coordsName)) {
                         // parser.require(START_TAG, GML.NAMESPACE,
@@ -509,11 +509,11 @@ public abstract class NewXmlFeatureParser<FT extends FeatureType, F extends Feat
                 parser.nextTag();
                 parser.require(START_TAG, GML.NAMESPACE, null);
                 Coordinate point;
-                if (GML.pos.getLocalPart().equals(parser.getName())) {
+                if (GML.pos.getLocalPart().equalsIgnoreCase(parser.getName())) {
                         Coordinate[] coords = parseCoordList(dimension);
                         point = coords[0];
                         parser.nextTag();
-                } else if (GML.coordinates.getLocalPart().equals(parser.getName())) {
+                } else if (GML.coordinates.getLocalPart().equalsIgnoreCase(parser.getName())) {
                         Coordinate[] coords = parseCoordinates(dimension);
                         point = coords[0];
                         parser.nextTag();

@@ -22,6 +22,7 @@ import javax.xml.namespace.QName;
 
 import org.eclipse.xsd.XSDElementDeclaration;
 import org.geotools.feature.complex.ComplexFeatureTypeRegistry;
+import org.geotools.feature.complex.HrefMap;
 import org.geotools.gml2.FeatureTypeCache;
 import org.geotools.gml3.GML;
 import org.geotools.gml3.XSDIdRegistry;
@@ -83,15 +84,17 @@ public class ComplexFeatureTypeBinding extends AbstractComplexBinding {
     SchemaIndex schemaIndex;
     Configuration configuration;
     GML3EncodingUtils encodingUtils;
+    HrefMap hrefMap;
     
     public ComplexFeatureTypeBinding(FeatureTypeCache ftCache, ComplexFeatureTypeRegistry registry,
-            SchemaIndex schemaIndex, Configuration configuration, XSDIdRegistry idRegistry) {
+            SchemaIndex schemaIndex, Configuration configuration, XSDIdRegistry idRegistry, HrefMap hrefMap) {
         
         this.ftCache = ftCache;
         this.registry = registry;
         this.schemaIndex = schemaIndex;
         this.configuration = configuration;
         this.idSet = idRegistry;
+        this.hrefMap = hrefMap;
     }
 
     /**
@@ -119,7 +122,7 @@ public class ComplexFeatureTypeBinding extends AbstractComplexBinding {
      */
     public Object parse(ElementInstance instance, Node node, Object value)
         throws Exception {
-        return GMLComplexParsingUtils.parseFeature(instance, node, value, ftCache, registry);
+        return GMLComplexParsingUtils.parseFeature(instance, node, value, ftCache, registry, hrefMap);
     }
 
     public Element encode(Object object, Document document, Element value)
