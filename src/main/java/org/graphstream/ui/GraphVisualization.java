@@ -16,6 +16,8 @@ import org.graphstream.ui.spriteManager.SpriteManager;
 import org.graphstream.ui.view.Viewer;
 import org.graphstream.ui.view.ViewerListener;
 import org.graphstream.ui.view.ViewerPipe;
+import org.opengis.feature.type.AssociationType;
+import org.opengis.feature.type.AttributeType;
 import org.opengis.feature.type.ComplexType;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.GeometryType;
@@ -34,6 +36,8 @@ public class GraphVisualization {
     
     private Map<String, Node> visited = new HashMap<String, Node>();
     
+    private Map<Node, PropertyType> types = new HashMap<Node, PropertyType>();
+    
     private ClickListener listener = new ClickListener();
     
     ViewerPipe fromViewer;
@@ -41,7 +45,6 @@ public class GraphVisualization {
     protected boolean loop = true;
     
     public GraphVisualization(FeatureType topLevelType) {
-        
         System.setProperty("gs.ui.renderer", "org.graphstream.ui.j2dviewer.J2DGraphRenderer");
         
         graph = new SingleGraph("feature graph", false, true);
@@ -62,13 +65,12 @@ public class GraphVisualization {
         }
     }
     
-    public void traverseType(PropertyType type) {
-        
-    }
-    
-    public Node traverseComplexType(ComplexType c, String parentName) {
+    public Node traverseComplexType(ComplexType c) {
         String cName = c.getName().getLocalPart();
+        
         Node cNode = graph.addNode(UUID.randomUUID().toString());
+        types.put(cNode, c);
+        
         cNode.addAttribute("ui.class", "complex, invisible");
         cNode.addAttribute("ui.label", cName);
         
@@ -78,27 +80,50 @@ public class GraphVisualization {
             PropertyType type = desc.getType();
             
             String descName = desc.getName().getLocalPart();
-            Node to = null;
-            if(type instanceof FeatureType) {
-                to = traverseFeatureType((FeatureType) type);
-            } else if(type instanceof ComplexType) {
-                to = traverseComplexType((ComplexType) type, cName);
-            } else {
-                String attrName = type.getName().getLocalPart();
-                to = graph.addNode(UUID.randomUUID().toString());
-                to.addAttribute("ui.label", attrName);
-                
-                if(type instanceof GeometryType) {
-                   to.addAttribute("ui.class", "geometry, invisible");
-                } else {
-                   to.addAttribute("ui.class", "attribute, invisible");
-                }
-            }
+            
+            Node to = traverseNextType(type);
             Edge e = graph.addEdge(UUID.randomUUID().toString(), cNode, to, true);
             e.addAttribute("ui.label", descName);
         }
         
         return cNode;
+    }
+    
+    public Node traverseNextType(PropertyType type) {
+        Node to = null;
+        if(type instanceof FeatureType) {
+            to = traverseFeatureType((FeatureType) type);
+        } else if(type instanceof ComplexType) {
+            to = traverseComplexType((ComplexType) type);
+        } else if(type instanceof AssociationType) {
+            to = traverseAssociationType((AssociationType) type);
+        } else {
+            String attrName = type.getName().getLocalPart();
+            to = graph.addNode(UUID.randomUUID().toString());
+            to.addAttribute("ui.label", attrName);
+            
+            if(type instanceof GeometryType) {
+               to.addAttribute("ui.class", "geometry, invisible");
+            } else {
+               to.addAttribute("ui.class", "attribute, invisible");
+            }
+        }
+        return to;
+    }
+    
+    public Node traverseAssociationType(AssociationType t) {
+        String name = t.getName().getLocalPart();
+        Node from = graph.addNode(UUID.randomUUID().toString());
+        from.addAttribute("ui.class", "association, invisible");
+        from.addAttribute("ui.label", name);
+        
+        AttributeType related = t.getRelatedType();
+        Node to = traverseNextType(related);
+        
+        Edge e = graph.addEdge(UUID.randomUUID().toString(), from, to, true);
+        e.addAttribute("ui.class", "association");
+        
+        return from;
     }
     
     public Node traverseFeatureType(FeatureType ft) {
@@ -108,6 +133,8 @@ public class GraphVisualization {
             fNode = visited.get(fName);
         } else {
             fNode = graph.addNode(fName);
+            types.put(fNode, ft);
+            
             fNode.addAttribute("ui.class", "feature");
             fNode.addAttribute("ui.label", fName);
             visited.put(fName, fNode);
@@ -118,16 +145,7 @@ public class GraphVisualization {
                 PropertyType type = desc.getType();
                 
                 String descName = desc.getName().getLocalPart();
-                Node to = null;
-                if(type instanceof FeatureType) {
-                    to = traverseFeatureType((FeatureType) type);
-                } else if(type instanceof ComplexType) {
-                    to = traverseComplexType((ComplexType) type, fName);
-                } else {
-                    String attrName = type.getName().getLocalPart();
-                    to = graph.addNode(UUID.randomUUID().toString());
-                    to.addAttribute("ui.label", attrName);
-                }
+                Node to = traverseNextType(type);
                 Edge e = graph.addEdge(UUID.randomUUID().toString(), fNode, to, true);
                 e.addAttribute("ui.label", descName);
             }
@@ -139,27 +157,30 @@ public class GraphVisualization {
 
         @Override
         public void viewClosed(String viewName) {
-            // TODO Auto-generated method stub
             loop = false;
         }
 
         public void buttonPushed(String id) {
             Node n = graph.getNode(id);
-            if(((String)n.getAttribute("ui.class")).contains("complex")) {
-                n.addAttribute("ui.class", "complex, visible");
+            
+            PropertyType type = types.get(n);
+            System.out.println(type);
+            
+            String clazz = ((String)n.getAttribute("ui.class"));
+            if(clazz != null && clazz.contains("invisible")) {
+                String[] st = clazz.split(",");
+                n.addAttribute("ui.class", st[0] + ", visible");
             }
-            System.out.println("Button pushed on node "+id);
         }
     
         public void buttonReleased(String id) {
             Node n = graph.getNode(id);
-            if(((String)n.getAttribute("ui.class")).contains("complex")) {
-                n.addAttribute("ui.class", "complex, invisible");
+            
+            String clazz = ((String)n.getAttribute("ui.class"));
+            if(clazz != null && clazz.contains("visible")) {
+                String[] st = clazz.split(",");
+                n.addAttribute("ui.class", st[0] + ", invisible");
             }
-            System.out.println("Button released on node "+ graph.getNode(id).getAttribute("ui.label"));
         }
-        
-        
-        
     }
 }

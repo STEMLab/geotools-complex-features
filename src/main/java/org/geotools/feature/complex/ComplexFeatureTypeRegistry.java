@@ -52,10 +52,12 @@ import org.geotools.xs.XSSchema;
 import org.opengis.feature.type.AttributeDescriptor;
 import org.opengis.feature.type.AttributeType;
 import org.opengis.feature.type.ComplexType;
+import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.FeatureTypeFactory;
 import org.opengis.feature.type.GeometryType;
 import org.opengis.feature.type.Name;
 import org.opengis.feature.type.PropertyDescriptor;
+import org.opengis.feature.type.PropertyType;
 import org.opengis.feature.type.Schema;
 import org.opengis.filter.Filter;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -242,7 +244,7 @@ public class ComplexFeatureTypeRegistry {
             if (!(sub.getName().equals(elemDecl.getName()))
                     || !(sub.getTargetNamespace().equals(elemDecl.getTargetNamespace()))) {
                 Name elemName = Types.typeName(sub.getTargetNamespace(), sub.getName());
-                AttributeType type = getTypeOf(sub, crs);
+                AttributeType type = (AttributeType) getTypeOf(sub, crs);
                 if (type != null) {
                     substitutionGroup.add(createAttributeDescriptor(type, crs, elemName, minOccurs,
                             maxOccurs, nillable, null));
@@ -376,7 +378,7 @@ public class ComplexFeatureTypeRegistry {
         String targetNamespace = elemDecl.getTargetNamespace();
         String name = elemDecl.getName();
         Name elemName = Types.typeName(targetNamespace, name);
-        AttributeType type = getTypeOf(elemDecl, crs);
+        AttributeType type = (AttributeType) getTypeOf(elemDecl, crs);
         boolean nillable = elemDecl.isNillable();
         Object defaultValue = null;
         AttributeDescriptor descriptor = createAttributeDescriptor(type, crs, elemName, minOccurs,
@@ -393,7 +395,7 @@ public class ComplexFeatureTypeRegistry {
      * @param elemDecl
      * @return
      */
-    private AttributeType getTypeOf(XSDElementDeclaration elemDecl, CoordinateReferenceSystem crs) {
+    private PropertyType getTypeOf(XSDElementDeclaration elemDecl, CoordinateReferenceSystem crs) {
         XSDTypeDefinition typeDefinition;
 
         // TODO REVISIT, I'm not sure this is the way to find out if the
@@ -440,7 +442,7 @@ public class ComplexFeatureTypeRegistry {
             throw new NoSuchElementException(msg);
         }
 
-        AttributeType type;
+        PropertyType type;
         if (hasToBeRegistered) {
             String targetNamespace = typeDefinition.getTargetNamespace();
             String name = typeDefinition.getName();
@@ -500,7 +502,7 @@ public class ComplexFeatureTypeRegistry {
     private AttributeType createType(final Name assignedName,
             final XSDTypeDefinition typeDefinition, CoordinateReferenceSystem crs, boolean anonymous) {
 
-        AttributeType attType;
+        AttributeType attType = null;
         // /////////
         if (processingTypes.contains(assignedName)) {
             if (LOGGER.isLoggable(Level.FINE)) {
@@ -526,32 +528,25 @@ public class ComplexFeatureTypeRegistry {
         } else {
             LOGGER.warning(assignedName + " has no super type");
         }
-
+       
+        if(helper.isGeometryType(typeDefinition)) {
+            System.out.println();
+        }
+        
         if (typeDefinition instanceof XSDComplexTypeDefinition) {
-            
-            if(typeDefinition.getTargetNamespace().contains("core")) {
-                System.out.println();
-            }
-            
             XSDComplexTypeDefinition complexTypeDef;
             complexTypeDef = (XSDComplexTypeDefinition) typeDefinition;
-            boolean includeParents = true;
+            boolean includeParents = false;
             List<XSDElementDeclaration> children = Schemas.getChildElementDeclarations(
                     typeDefinition, includeParents);
 
             final Collection<PropertyDescriptor> schema = new ArrayList<PropertyDescriptor>(
                     children.size());
             
-           
-            
             XSDElementDeclaration childDecl;
             AttributeDescriptor descriptor;
             for (Iterator it = children.iterator(); it.hasNext();) {
                 childDecl = (XSDElementDeclaration) it.next();
-                
-                if(childDecl.getName().equalsIgnoreCase("duality")) {
-                    System.out.println();
-                }
                 
                 try {
                     descriptor = createAttributeDescriptor(complexTypeDef, childDecl, crs);
@@ -591,9 +586,20 @@ public class ComplexFeatureTypeRegistry {
                 }
                 setSubstitutionGroup(complexTypeDef, elemDecl, att, crs);
             }
-            attType = createComplexAttributeType(assignedName, schema, complexTypeDef, superType);
-            
-            
+            if(schema.isEmpty()) {
+                Class<?> binding = Object.class;
+                boolean isIdentifiable = helper.isIdentifiable(complexTypeDef);
+                boolean isAbstract = complexTypeDef.isAbstract();
+                List<Filter> restrictions = Collections.emptyList();
+                InternationalString description = null;
+                
+                attType = typeFactory.createAttributeType(assignedName, binding, isIdentifiable,
+                        isAbstract, restrictions, superType, description);
+            } else if(schema.size() == 1 && schema.iterator().next().getType() instanceof FeatureType) {
+                
+            } else {
+                attType = createComplexAttributeType(assignedName, schema, complexTypeDef, superType);
+            }
             
         } else {
             Class<?> binding = String.class;
@@ -633,7 +639,7 @@ public class ComplexFeatureTypeRegistry {
             final Collection<PropertyDescriptor> schema,
             final XSDComplexTypeDefinition typeDefinition, final AttributeType superType) {
 
-        boolean isAbstract = false;// TODO
+        boolean isAbstract = typeDefinition.isAbstract();
         List<Filter> restrictions = Collections.emptyList();
         InternationalString description = null; // TODO
         

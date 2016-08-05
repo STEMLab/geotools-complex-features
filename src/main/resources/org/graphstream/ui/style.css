@@ -33,6 +33,11 @@ node.attribute {
 	fill-color: blue;
 }
 
+node.association {
+	shape: circle;
+	fill-color: yellow;
+}
+
 node.geometry {
 	shape: diamond;
 	fill-color: skyblue;
@@ -46,7 +51,11 @@ node.invisible {
 	text-mode : hidden;
 }
 
-edge {
-	text-mode : hidden;
-	text-alignment : along;
+edge{
+	text-mode : normal;
+	text-alignment : under;
+}
+
+edge.association {
+	stroke-mode : dots;
 }

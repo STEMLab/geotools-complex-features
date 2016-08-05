@@ -3,6 +3,10 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.namespace.QName;
 
@@ -114,7 +118,7 @@ public class ComplexFeatureParsingTest {
             PullParser parser = new PullParser( conf, in, new QName("http://www.opengis.net/indoorgml/1.0/core","IndoorFeatures") );
              
             List<Feature> fList = new ArrayList<Feature>();
-            Feature f = null;
+            Feature f;
             while( ( f = (Feature) parser.parse() ) != null ) {
                 fList.add(f);
             }
@@ -161,7 +165,7 @@ public class ComplexFeatureParsingTest {
         }
     }
     
-    private Feature parseFeatureType() throws Exception {
+    private FeatureType parseFeatureType() throws Exception {
         File cacheDirectory = new File(DataUtilities.urlToFile(ComplexFeatureParsingTest.class
                 .getResource("/")), "/schemas");
         SchemaResolver resolver = new SchemaResolver( new SchemaCache(cacheDirectory, true));
@@ -173,8 +177,8 @@ public class ComplexFeatureParsingTest {
         Feature f;
         try {
             FeatureTypeFactory factory = new ComplexFeatureTypeFactoryImpl();
-            FeatureTypeRegistry registry = new FeatureTypeRegistry(factory,
-                    new GmlFeatureTypeRegistryConfiguration(null));
+            ComplexFeatureTypeRegistry registry = new ComplexFeatureTypeRegistry(null, factory,
+                    new GmlFeatureTypeRegistryConfiguration(null), false);
             registry.addSchemas(schemaIndex);
     
             InputStream in = getClass().getResourceAsStream("SMALL.gml");
@@ -182,7 +186,9 @@ public class ComplexFeatureParsingTest {
             AttributeDescriptor descriptor = registry.getDescriptor(
                     new NameImpl("http://www.opengis.net/indoorgml/1.0/core",":" ,"IndoorFeatures"), null);
             AttributeType type = descriptor.getType();
-           
+            
+            return (FeatureType) type;
+            /*
             Name descName = descriptor.getName();
             
             NewXmlComplexFeatureParser featureParser = new NewXmlComplexFeatureParser(
@@ -195,22 +201,49 @@ public class ComplexFeatureParsingTest {
             if(f == null) {
                 throw new NullPointerException("feature parsing failed");
             }
+            */
         } finally {
             if (schemaIndex != null) {
                 schemaIndex.destroy();
             }
         }
-        return f;
     }
     
+    private Feature parseFeatureTypeConf() throws Exception {
+      //Schema download and resolve
+        File cacheDirectory = new File(DataUtilities.urlToFile(ComplexFeatureParsingTest.class
+                .getResource("/")), "/schemas");
+        SchemaResolver resolver = new SchemaResolver( new SchemaCache(cacheDirectory, true));
+        
+        ComplexApplicationSchemaConfiguration conf = new ComplexApplicationSchemaConfiguration("http://www.opengis.net/indoorgml/1.0/core",
+                "http://schemas.opengis.net/indoorgml/1.0/indoorgmlcore.xsd", resolver);
+        
+        SchemaIndex schemaIndex = null;
+        try {
+            schemaIndex = Schemas.findSchemas(conf);
+
+            ComplexFeatureTypeRegistry registry = new ComplexFeatureTypeRegistry(new FeatureTypeFactoryImpl(),
+                    new GmlFeatureTypeRegistryConfiguration(null));
+            registry.addSchemas(schemaIndex);
+             
+            conf.setFeatureTypeRegistry(registry);
+            InputStream in = getClass().getResourceAsStream("SMALL.gml");
+            PullParser parser = new PullParser( conf, in, new QName("http://www.opengis.net/indoorgml/1.0/core","IndoorFeatures") );
+            
+            Feature f = (Feature) parser.parse();
+            return f;
+        } finally {
+            if (schemaIndex != null) {
+                schemaIndex.destroy();
+            }
+        }
+    }
     @Test
     public void testVisualization() throws Exception {
-        
-        Feature f = parseFeatureType();
-        FeatureType fType = f.getType();
+        FeatureType fType = parseFeatureType();
         
         GraphVisualization v = new GraphVisualization(fType);
-                System.out.println();
+        System.out.println();
     }
     
 }
